@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Combined Assignments</title>
+
+    <style>
+
+        body{
+            font-family: Arial;
+            margin:40px;
+        }
+
+        input{
+            padding:10px;
+            width:300px;
+        }
+
+        button{
+            padding:10px 20px;
+            background:blue;
+            color:white;
+            border:none;
+            cursor:pointer;
+        }
+
+    </style>
+
+</head>
+<body>
+
+    <h1>Combined Assignments</h1>
+
+    <h2>Assignment 1</h2>
+
+    <p>
+        Excel data is managed using Backend-One.
+    </p>
+
+    <h2>Assignment 2</h2>
+
+    <p>
+        Assignment 2 uses Backend-Two.
+    </p>
+
+    <hr>
+
+    <h2>Send Submission Email</h2>
+
+    <input type="email" id="email" placeholder="Enter email address">
+
+    <button onclick="sendEmail()">
+        Send Email
+    </button>
+
+    <p id="message"></p>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+
+async function sendEmail(){
+
+    const email = document.getElementById("email").value;
+
+    try{
+
+        const response = await axios.post(
+            "/api/send-email",
+            { email }
+        );
+
+        document.getElementById("message").innerHTML =
+            "✅ Email request sent successfully.";
+
+    }catch(error){
+
+        document.getElementById("message").innerHTML =
+            "❌ Failed to send email.";
+
+        console.log(error);
+    }
+}
+
+</script>
+
+<br><br>
+
+<a href="/">← Back Home</a>
+
+</body>
+</html>

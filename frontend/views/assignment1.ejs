@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment 1</title>
+    <style>
+        body { 
+            font-family: 'Times New Roman', Times, serif; 
+            margin: 40px; 
+            line-height: 1.6;
+        }
+        table { 
+            border-collapse: collapse; 
+            width: 95%; 
+            margin: 20px auto; 
+            font-size: 15px;           /* Reduced table size */
+        }
+        th, td { 
+            border: 1px solid #666; 
+            padding: 10px; 
+            text-align: left; 
+            vertical-align: top;
+        }
+        th { 
+            background-color: #f0f0f0; 
+            font-weight: bold; 
+        }
+        textarea { 
+            width: 100%; 
+            min-height: 140px;           
+            padding: 10px; 
+            box-sizing: border-box; 
+            font-size: 15px; 
+            font-family: 'Times New Roman', Times, serif;
+            border: 2px solid #0066cc;
+            border-radius: 4px;
+            resize: vertical;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+        button { 
+            padding: 12px 20px; 
+            font-size: 16px; 
+            margin: 20px 0; 
+            background: #0066cc; 
+            color: white; 
+            border: none; 
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover { background: #0055aa; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Assignment 1 - Excel Data</h1>
+    
+    <p><strong>Only "Answer" and "Resources" columns are editable</strong></p>
+    
+    <div id="table-container">
+        <p>Loading Excel file... Please wait.</p>
+    </div>
+
+    <button onclick="saveChanges()">💾 Save Changes to Excel</button>
+    <p id="status"></p>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        let tableData = [];
+        let changes = new Map();
+
+        async function loadExcel() {
+            const container = document.getElementById('table-container');
+            container.innerHTML = "<p>Loading Excel from Backend-One...</p>";
+
+            try {
+                const response = await axios.get('/api/excel');
+                tableData = response.data;
+                renderTable();
+            } catch (error) {
+                container.innerHTML = `
+                    <p class="error">
+                        ❌ Cannot load Excel file.<br>
+                        Make sure Backend-One is running on <strong>http://localhost:3001</strong>
+                    </p>`;
+            }
+        }
+
+        function renderTable() {
+            let html = '<table><tr>';
+            
+            tableData[0].forEach((header) => {
+                html += `<th>${header}</th>`;
+            });
+            html += '</tr>';
+
+            for (let i = 1; i < tableData.length; i++) {
+                html += '<tr>';
+                for (let j = 0; j < tableData[i].length; j++) {
+                    const value = tableData[i][j] || '';
+                    const isEditable = (j === 3 || j === 4); 
+
+                    if (isEditable) {
+                        html += `<td>
+                                    <textarea onchange="updateCell(${i}, ${j}, this.value)">${value}</textarea>
+                                 </td>`;
+                    } else {
+                        html += `<td>${value}</td>`;
+                    }
+                }
+                html += '</tr>';
+            }
+            html += '</table>';
+            document.getElementById('table-container').innerHTML = html;
+        }
+
+        function updateCell(row, col, value) {
+            changes.set(`${row}-${col}`, value);
+        }
+
+        async function saveChanges() {
+            const status = document.getElementById('status');
+            status.textContent = 'Saving changes...';
+
+            for (let [key, value] of changes) {
+                const [row, col] = key.split('-').map(Number);
+                try {
+                    await axios.post('http://localhost:3001/api/assignment1/update', { row, col, value });
+                } catch (e) {}
+            }
+
+            status.innerHTML = '<span class="success">✅ Changes saved successfully to Excel file!</span>';
+            changes.clear();
+            setTimeout(loadExcel, 1200);
+        }
+
+        window.onload = loadExcel;
+    </script>
+
+    <br>
+    <a href="/">← Back to Home</a>
+</body>
+</html>
